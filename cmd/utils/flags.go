@@ -27,6 +27,7 @@ import (
 	"math"
 	"math/big"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"path/filepath"
 	godebug "runtime/debug"
@@ -2115,6 +2116,21 @@ func RegisterFullSyncTester(stack *node.Node, eth *eth.Ethereum, path string) {
 	log.Info("Registered full-sync tester", "number", block.NumberU64(), "hash", block.Hash())
 }
 
+func SetupProfiling() {
+	fmt.Println("Setup profiling server")
+	r := http.NewServeMux()
+	r.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	r.HandleFunc("/debug/pprof/heap", pprof.Index)
+	r.HandleFunc("/debug/pprof/goroutine", pprof.Index)
+	r.HandleFunc("/debug/pprof/threadcreate", pprof.Index)
+	r.HandleFunc("/debug/pprof/block", pprof.Index)
+	go func() {
+		if err := http.ListenAndServe(":44444", r); err != nil {
+			log.Error("Failure in running profiling server", "err", err)
+		}
+	}()
+
+}
 func SetupMetrics(ctx *cli.Context) {
 	if metrics.Enabled {
 		log.Info("Enabling metrics collection")
