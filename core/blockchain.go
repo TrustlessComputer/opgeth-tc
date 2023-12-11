@@ -534,6 +534,27 @@ func (bc *BlockChain) loadLastState() error {
 	if pivot := rawdb.ReadLastPivotNumber(bc.db); pivot != nil {
 		log.Info("Loaded last fast-sync pivot marker", "number", *pivot)
 	}
+
+	//rewrite cannonical block
+	parentBlockHash := headBlock.ParentHash()
+	for true {
+		batch := bc.db.NewBatch()
+		parentBlock := bc.GetBlockByHash(parentBlockHash)
+		if parentBlock == nil {
+			break
+		}
+		rawdb.WriteCanonicalHash(batch, parentBlock.Hash(), parentBlock.NumberU64())
+		// Flush the whole batch into the disk, exit the node if failed
+		if err := batch.Write(); err != nil {
+			log.Crit("Failed to update chain indexes and markers", "err", err)
+		}
+		if parentBlock.Number().Int64() == 7588779 {
+			break
+		}
+		parentBlockHash = parentBlock.ParentHash()
+		fmt.Println(parentBlock.Number(), parentBlockHash.String())
+	}
+
 	return nil
 }
 

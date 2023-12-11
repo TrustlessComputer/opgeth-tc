@@ -425,7 +425,7 @@ func (h *handler) handleCallMsg(ctx *callProc, msg *jsonrpcMessage) *jsonrpcMess
 			if resp.Error.Data != nil {
 				ctx = append(ctx, "errdata", resp.Error.Data)
 			}
-			if msg.Method != "eth_debugTraceTransaction" {
+			if msg.Method != "debug_traceTransaction" {
 				h.log.Warn("Served "+msg.Method, ctx...)
 			}
 		} else {
